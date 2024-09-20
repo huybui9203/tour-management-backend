@@ -5,7 +5,9 @@
   "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --watch src/server.js"
+    "start": "node --watch src/server.js",
+    "init-table": "npx sequelize-cli db:migrate",
+    "init-data": "npx sequelize-cli db:seed:all"
   },
   "repository": {
     "type": "git",

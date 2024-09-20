@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Schedule',
+    timestamps:true
   });
   return Schedule;
 };

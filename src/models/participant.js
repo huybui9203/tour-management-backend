@@ -5,13 +5,13 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Participant extends Model {
     static associate(models) {
-      Participant.belongsTo(models.Order, {foreignKey: 'order_id', targetKey: 'id', as: 'order'})
+      Participant.belongsTo(models.Order, {foreignKey: 'order_id', targetKey:'id', as: 'order'})
     }
   }
   Participant.init({
-    number_of_adults: DataTypes.INTEGER,
-    number_of_children: DataTypes.INTEGER,
-    total_count: DataTypes.INTEGER,
+    name: DataTypes.STRING,
+    sex: DataTypes.BOOLEAN,
+    date_of_birth: DataTypes.DATE,
     order_id: DataTypes.INTEGER
   }, {
     sequelize,

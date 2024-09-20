@@ -9,11 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      order_num: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        primaryKey: true,
-      },
       name: {
         type: Sequelize.STRING
       },
@@ -29,26 +24,23 @@ module.exports = {
       number_of_guests: {
         type: Sequelize.INTEGER
       },
-      start_date: {
-        type: Sequelize.DATE
-      },
-      end_date: {
-        type: Sequelize.DATE
-      },
-      departure_point: {
+      total_day: {
         type: Sequelize.STRING
       },
-      img_url: {
+      departure_point: {
         type: Sequelize.STRING
       },
       destination: {
         type: Sequelize.STRING
       },
+      img_url: {
+        type: Sequelize.STRING
+      },
       rating: {
         type: Sequelize.FLOAT
       },
-      tour_type: {
-        type: Sequelize.INTEGER
+      status: {
+        type: Sequelize.BOOLEAN
       },
       res_id: {
         type: Sequelize.INTEGER
@@ -56,9 +48,21 @@ module.exports = {
       hotel_id: {
         type: Sequelize.INTEGER
       },
+      list_type_id: {
+        type: Sequelize.INTEGER
+      },
+      type_id: {
+        type: Sequelize.INTEGER
+      },
+
+      list_veh_id: {
+        type: Sequelize.INTEGER
+      },
+
       veh_id: {
         type: Sequelize.INTEGER
       },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

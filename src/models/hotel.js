@@ -5,7 +5,7 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Hotel extends Model {
     static associate(models) {
-      Hotel.hasMany(models.Tour, {foreignKey: 'id'})
+      Hotel.hasMany(models.Tour, {foreignKey: 'hotel_id'})
     }
   }
   Hotel.init({
@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Hotel',
+    timestamps:true
   });
   return Hotel;
 };
