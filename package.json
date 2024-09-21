@@ -1,35 +1,32 @@
 {
-    "name": "tour-management-backend",
-    "version": "1.0.0",
-    "description": "",
-    "main": "src/server.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node --watch src/server.js",
-        "migrate": "npx sequelize-cli db:migrate --config=src/config/config.js --migrations-path src/migrations",
-        "seed": "npx sequelize-cli db:seed:all --config=src/config/config.js --seeders-path src/seeders"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/huybui9203/tour-management-backend.git"
-    },
-    "author": "huybui",
-    "license": "ISC",
-    "bugs": {
-        "url": "https://github.com/huybui9203/tour-management-backend/issues"
-    },
-    "homepage": "https://github.com/huybui9203/tour-management-backend#readme",
-    "dependencies": {
-        "bcryptjs": "^2.4.3",
-        "cookie-parser": "^1.4.6",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
-        "express": "^4.19.2",
-        "jsonwebtoken": "^9.0.2",
-        "mysql2": "^3.11.0"
-    },
-    "devDependencies": {
-        "sequelize": "^6.37.3",
-        "sequelize-cli": "^6.6.2"
-    }
+  "name": "tour-management-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --watch src/server.js",
+    "init-table": "npx sequelize-cli db:migrate",
+    "init-data": "npx sequelize-cli db:seed:all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huybui9203/tour-management-backend.git"
+  },
+  "author": "huybui",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/huybui9203/tour-management-backend/issues"
+  },
+  "homepage": "https://github.com/huybui9203/tour-management-backend#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0"
+  },
+  "devDependencies": {
+    "sequelize": "^6.37.3",
+    "sequelize-cli": "^6.6.2"
+  }
 }

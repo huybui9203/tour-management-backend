@@ -18,13 +18,13 @@ module.exports = {
       password: {
         type: Sequelize.STRING
       },
-      employee_id: {
-        type: Sequelize.INTEGER
+      email: {
+        type: Sequelize.STRING
+      },
+      list_role_id: {
+        type: Sequelize.INTEGER,
       },
       role_id: {
-        type: Sequelize.INTEGER
-      },
-      cust_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {

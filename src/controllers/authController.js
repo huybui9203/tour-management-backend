@@ -7,7 +7,7 @@ const { where } = require("sequelize");
 class AuthController {
     // Signup [POST]
     async signup(req, res) {
-        const { email, username, password, role = 1 } = req.body;
+        const { email, username, password, list_id = 1, ele_id = 1 } = req.body;
         if (!username || !password || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -26,25 +26,18 @@ class AuthController {
                 });
                 return;
             }
-            const newEmployee = await db.Employee.create({});
-            const newCustomer = await db.Customer.create({});
+
             const salt = bcryptjs.genSaltSync(10);
             const hashedPassword = bcryptjs.hashSync(password, salt);
-
             const newAccount = await db.Account.create({
                 email,
                 username,
                 password: hashedPassword,
-                role_id: role,
+                list_role_id: list_id,
+                role_id: ele_id,
             });
 
             res.status(200).json({
-                role: newAccount.role_id,
-                result: {
-                    newEmployee,
-                    newCustomer,
-                    newAccount,
-                },
                 message: "Signup successfull",
             });
         } catch (error) {
@@ -72,7 +65,7 @@ class AuthController {
 
             if (!account) {
                 res.status(400).json({
-                    message: "Username don't exist!!",
+                    message: "Account don't signup!!",
                 });
                 return;
             }
@@ -85,8 +78,8 @@ class AuthController {
                 return;
             }
 
-            const access_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_SECRET_KEY);
-            const refresh_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_REFRESH_KEY);
+            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
@@ -97,8 +90,15 @@ class AuthController {
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
+            const role = await db.ListValues.findOne({
+                where: {
+                    list_id: account.list_role_id,
+                    ele_id: account.role_id,
+                },
+            });
+
             res.status(200).json({
-                role: account.role_id,
+                role: role.ele_name,
                 username: account.username,
                 message: "Login successfully",
             });
@@ -123,11 +123,30 @@ class AuthController {
         }
     }
     // refresh token [POST]
-    async refreshToken(req, res) {}
+    async refreshToken(req, res) {
+        const refresh_token = req.cookies["refresh_token"];
+        if (!refresh_token) {
+            res.status(401).json({
+                message: "Unauthorized",
+            });
+            return;
+        }
+        jwt.verify(refresh_token, process.env.JWT_REFRESH_KEY, (err, { id }) => {
+            const access_token = jwt.sign({ id: id }, process.env.JWT_SECRET_KEY);
+
+            res.cookie("access_token", access_token, {
+                httpOnly: true,
+                maxAge: 15 * 60 * 1000,
+            });
+        });
+        res.status(200).json({
+            message: "Refresh",
+        });
+    }
 
     // googleAuth [POST]
     async googleAuth(req, res) {
-        const { email, username, role = 1 } = req.body;
+        const { email, username, list_id = 1, ele_id = 1 } = req.body;
         if (!username || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -141,9 +160,6 @@ class AuthController {
                 },
             });
             if (!account) {
-                const newEmployee = await db.Employee.create({});
-                const newCustomer = await db.Customer.create({});
-                const salt = bcryptjs.genSaltSync(10);
                 const generatePassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
                 const newUsername = username.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
                 const hashedPassword = bcryptjs.hashSync(generatePassword, salt);
@@ -151,14 +167,13 @@ class AuthController {
                     email,
                     username: newUsername,
                     password: hashedPassword,
-                    cust_id: newCustomer.id,
-                    employee_id: newEmployee.id,
-                    role_id: role,
+                    list_role_id: list_id,
+                    role_id: ele_id,
                 });
             }
 
-            const access_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_SECRET_KEY);
-            const refresh_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_REFRESH_KEY);
+            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
@@ -169,8 +184,15 @@ class AuthController {
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
+            const role = await db.ListValues.findOne({
+                where: {
+                    list_id: account.list_role_id,
+                    ele_id: account.role_id,
+                },
+            });
+
             res.status(200).json({
-                role: account.role_id,
+                role: role.ele_name,
                 username: account.username,
                 message: "Login successfully",
             });
@@ -180,10 +202,10 @@ class AuthController {
             });
         }
     }
-    
+
     // facebookAuth [POST]
     async facebookAuth(req, res) {
-        const { email, username, role = 1 } = req.body;
+        const { email, username, list_id = 1, ele_id = 1 } = req.body;
         if (!username || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -197,8 +219,6 @@ class AuthController {
                 },
             });
             if (!account) {
-                const newEmployee = await db.Employee.create({});
-                const newCustomer = await db.Customer.create({});
                 const salt = bcryptjs.genSaltSync(10);
                 const generatePassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
                 const newUsername = username.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
@@ -207,14 +227,13 @@ class AuthController {
                     email,
                     username: newUsername,
                     password: hashedPassword,
-                    cust_id: newCustomer.id,
-                    employee_id: newEmployee.id,
-                    role_id: role,
+                    list_role_id: list_id,
+                    role_id: ele_id,
                 });
             }
 
-            const access_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_SECRET_KEY);
-            const refresh_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_REFRESH_KEY);
+            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
@@ -225,8 +244,15 @@ class AuthController {
                 maxAge: 24 * 60 * 60 * 1000,
             });
 
+            const role = await db.ListValues.findOne({
+                where: {
+                    list_id: account.list_role_id,
+                    ele_id: account.role_id,
+                },
+            });
+
             res.status(200).json({
-                role: account.role_id,
+                role: role.ele_name,
                 username: account.username,
                 message: "Login successfully",
             });

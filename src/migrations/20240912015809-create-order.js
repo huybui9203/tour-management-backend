@@ -21,16 +21,34 @@ module.exports = {
       number_of_people: {
         type: Sequelize.INTEGER
       },
-      employee_id: {
+      children_count: {
         type: Sequelize.INTEGER
       },
-      status_id: {
+      adults_count: {
+        type: Sequelize.INTEGER
+      },
+      pay_date: {
+        type: Sequelize.DATE
+      },
+      rooms_count: {
+        type: Sequelize.INTEGER
+      },
+      rating: {
+        type:Sequelize.FLOAT
+      },
+      employee_id: {
         type: Sequelize.INTEGER
       },
       cust_id: {
         type: Sequelize.INTEGER
       },
-      tour_id: {
+      tour_day_id: {
+        type: Sequelize.INTEGER
+      },
+      list_status_id: {
+        type: Sequelize.INTEGER
+      }, 
+      status_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {

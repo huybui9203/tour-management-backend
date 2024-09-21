@@ -2,23 +2,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Participants', {
+    await queryInterface.createTable('TourDays', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      number_of_adults: {
-        type: Sequelize.INTEGER
+      start_date: {
+        type: Sequelize.DATE
       },
-      number_of_children: {
-        type: Sequelize.INTEGER
+      end_date: {
+        type: Sequelize.DATE
       },
-      total_count: {
-        type: Sequelize.INTEGER
-      },
-      order_id: {
+      tour_id: {
         type: Sequelize.INTEGER
       },
       createdAt: {
@@ -32,6 +29,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Participants');
+    await queryInterface.dropTable('TourDays');
   }
 };
