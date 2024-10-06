@@ -18,6 +18,9 @@ module.exports = {
       date_of_birth: {
         type: Sequelize.DATE
       },
+      price_for_one: {
+        type: Sequelize.FLOAT
+      },
       order_id: {
         type: Sequelize.INTEGER
       },
