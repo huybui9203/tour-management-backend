@@ -3,11 +3,12 @@ const jwt = require("jsonwebtoken");
 const bcryptjs = require("bcryptjs");
 const dotenv = require("dotenv");
 dotenv.config();
-const { where } = require("sequelize");
+const { where, Op } = require("sequelize");
+const {ROLES}  = require('../utils/listValues')
 class AuthController {
     // Signup [POST]
     async signup(req, res) {
-        const { email, username, password, list_id = 1, ele_id = 1 } = req.body;
+        const { email, username, password } = req.body;
         if (!username || !password || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -29,12 +30,14 @@ class AuthController {
 
             const salt = bcryptjs.genSaltSync(10);
             const hashedPassword = bcryptjs.hashSync(password, salt);
+
+            
             const newAccount = await db.Account.create({
                 email,
                 username,
                 password: hashedPassword,
-                list_role_id: list_id,
-                role_id: ele_id,
+                list_role_id: ROLES.ID,
+                role_id: ROLES.USER,
             });
 
             res.status(200).json({
@@ -58,10 +61,15 @@ class AuthController {
 
         try {
             const account = await db.Account.findOne({
+                include: [{model: db.ListValues, as: 'role',  where: {
+                    list_id: { [Op.col]: 'Account.list_role_id' }
+                }}],
                 where: {
                     email: email,
                 },
             });
+
+            console.log('>>>>>>>>', account)
 
             if (!account) {
                 res.status(400).json({
@@ -78,16 +86,16 @@ class AuthController {
                 return;
             }
 
-            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const access_token = jwt.sign({ id: account.id, role: account.role.ele_id }, process.env.JWT_SECRET_KEY);
             const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
-                maxAge: 15 * 60 * 1000,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
             });
             res.cookie("refresh_token", refresh_token, {
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
+                maxAge: 366 * 24 * 60 * 60 * 1000,
             });
 
             const role = await db.ListValues.findOne({
@@ -136,7 +144,7 @@ class AuthController {
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
-                maxAge: 15 * 60 * 1000,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
             });
         });
         res.status(200).json({
@@ -177,11 +185,11 @@ class AuthController {
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
-                maxAge: 15 * 60 * 1000,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
             });
             res.cookie("refresh_token", refresh_token, {
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
+                maxAge: 366 * 24 * 60 * 60 * 1000,
             });
 
             const role = await db.ListValues.findOne({
@@ -237,11 +245,11 @@ class AuthController {
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
-                maxAge: 15 * 60 * 1000,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
             });
             res.cookie("refresh_token", refresh_token, {
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000,
+                maxAge: 365 * 24 * 60 * 60 * 1000,
             });
 
             const role = await db.ListValues.findOne({
