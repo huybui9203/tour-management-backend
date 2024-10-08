@@ -3,8 +3,6 @@ const { where, Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const { ROLES } = require('../../utils/listValues');
 const bcryptjs = require('bcryptjs')
-
-console.log(bcryptjs.hashSync('admin', bcryptjs.genSaltSync(10)))
 class AccountController {
     async getTours(req, res, next) {
         try {
