@@ -50,7 +50,6 @@ class BookingController {
         } catch (error) {
             next(error)
         }
-        
     }
 
     async deleteBooking(req, res,next) {
