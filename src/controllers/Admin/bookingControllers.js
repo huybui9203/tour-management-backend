@@ -11,18 +11,21 @@ class BookingController {
                     {
                         model: db.Customer,
                         as: 'customer',
+                        required: true
                     },
 
                     {
                         model: db.TourDay,
                         as: 'tour_day',
-                        include: 'tour'
+                        include: [{model: db.Tour, as: 'tour', required: true}],
+                        required: true
                     },
 
                     {
                         model: db.ListValues,
                         as: 'status',
                         attributes: ['ele_name', 'ele_id'],
+                        required: true,
                         where: {
                             list_id: { [Op.col]: 'Order.list_status_id' }
                         }
@@ -75,18 +78,21 @@ class BookingController {
                     {
                         model: db.Customer,
                         as: 'customer',
+                        required: true
                     },
 
                     {
                         model: db.TourDay,
                         as: 'tour_day',
-                        include: 'tour'
+                        include: [{model: db.Tour, as: 'tour', required: true}],
+                        required: true
                     },
 
                     {
                         model: db.ListValues,
                         as: 'status',
                         attributes: ['ele_name', 'ele_id'],
+                        required: true,
                         where: {
                             list_id: { [Op.col]: 'Order.list_status_id' }
                         }

@@ -16,7 +16,8 @@ class AccountController {
                             attributes: ['ele_name', 'ele_id'],
                             where: {
                                 list_id: { [Op.col]: 'Account.list_role_id' }
-                            }
+                            },
+                            required: true
                         },
                         
                     ],
