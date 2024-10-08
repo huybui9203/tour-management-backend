@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class TourDay extends Model {
     static associate(models) {
       TourDay.belongsTo(models.Tour, {foreignKey: 'tour_id', targetKey:'id', as: 'tour'})
-      TourDay.hasMany(models.Order, {foreignKey: 'tour_day_id'})
+      TourDay.hasMany(models.Order, {foreignKey: 'tour_day_id', as: 'order'})
     }
   }
   TourDay.init({
@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'TourDay',
-    timestamps:true
+    timestamps:true,
+    paranoid: true,
   });
   return TourDay;
 };
