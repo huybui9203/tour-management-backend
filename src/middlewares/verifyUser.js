@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 
 const verifyUser = async (req, res, next) => {
     const accessToken = req.cookies["access_token"];
+
     if (!accessToken) {
         res.status(401).json({
             message: "Unauthorized",
@@ -12,9 +13,10 @@ const verifyUser = async (req, res, next) => {
 
     jwt.verify(accessToken, process.env.JWT_SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(401).json({
+            res.status(401).json({
                 message: "Authentication failed!!!",
             });
+            return;
         }
         if (!decoded.id) {
             res.status(404).json({
@@ -27,4 +29,4 @@ const verifyUser = async (req, res, next) => {
     });
 };
 
-module.exports = verifyUser
+module.exports = verifyUser;

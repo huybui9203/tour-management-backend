@@ -15,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'PlaceTour',
     timestamps: false,
+    paranoid: true,
   });
   return PlaceTour;
 };

@@ -4,7 +4,7 @@ const bcryptjs = require("bcryptjs");
 const dotenv = require("dotenv");
 dotenv.config();
 const { where, Op } = require("sequelize");
-const {ROLES}  = require('../utils/listValues')
+const { ROLES } = require("../utils/listValues");
 class AuthController {
     // Signup [POST]
     async signup(req, res) {
@@ -31,7 +31,6 @@ class AuthController {
             const salt = bcryptjs.genSaltSync(10);
             const hashedPassword = bcryptjs.hashSync(password, salt);
 
-            
             const newAccount = await db.Account.create({
                 email,
                 username,
@@ -52,6 +51,7 @@ class AuthController {
     // Login [POST]
     async login(req, res) {
         const { email, password } = req.body;
+
         if (!email || !password) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -61,15 +61,19 @@ class AuthController {
 
         try {
             const account = await db.Account.findOne({
-                include: [{model: db.ListValues, as: 'role',  where: {
-                    list_id: { [Op.col]: 'Account.list_role_id' }
-                }}],
+                include: [
+                    {
+                        model: db.ListValues,
+                        as: "role",
+                        where: {
+                            list_id: { [Op.col]: "Account.list_role_id" },
+                        },
+                    },
+                ],
                 where: {
                     email: email,
                 },
             });
-
-            console.log('>>>>>>>>', account)
 
             if (!account) {
                 res.status(400).json({
@@ -154,7 +158,7 @@ class AuthController {
 
     // googleAuth [POST]
     async googleAuth(req, res) {
-        const { email, username, list_id = 1, ele_id = 1 } = req.body;
+        const { email, username } = req.body;
         if (!username || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -168,6 +172,7 @@ class AuthController {
                 },
             });
             if (!account) {
+                const salt = bcryptjs.genSaltSync(10);
                 const generatePassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
                 const newUsername = username.split(" ").join("").toLowerCase() + Math.random().toString(36).slice(-4);
                 const hashedPassword = bcryptjs.hashSync(generatePassword, salt);
@@ -175,13 +180,15 @@ class AuthController {
                     email,
                     username: newUsername,
                     password: hashedPassword,
-                    list_role_id: list_id,
-                    role_id: ele_id,
+                    list_role_id: ROLES.ID,
+                    role_id: ROLES.USER,
                 });
             }
 
-            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const access_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_SECRET_KEY);
             const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
+
+            console.log(access_token, refresh_token);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,
@@ -213,7 +220,7 @@ class AuthController {
 
     // facebookAuth [POST]
     async facebookAuth(req, res) {
-        const { email, username, list_id = 1, ele_id = 1 } = req.body;
+        const { email, username } = req.body;
         if (!username || !email) {
             res.status(400).json({
                 message: "Error while sending data to server",
@@ -235,13 +242,14 @@ class AuthController {
                     email,
                     username: newUsername,
                     password: hashedPassword,
-                    list_role_id: list_id,
-                    role_id: ele_id,
+                    list_role_id: ROLES.ID,
+                    role_id: ROLES.USER,
                 });
             }
 
-            const access_token = jwt.sign({ id: account.id }, process.env.JWT_SECRET_KEY);
+            const access_token = jwt.sign({ id: account.id, role: account.role_id }, process.env.JWT_SECRET_KEY);
             const refresh_token = jwt.sign({ id: account.id }, process.env.JWT_REFRESH_KEY);
+            console.log(access_token, refresh_token);
 
             res.cookie("access_token", access_token, {
                 httpOnly: true,

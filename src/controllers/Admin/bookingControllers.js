@@ -65,6 +65,39 @@ class BookingController {
             next(error)
         }
     }
+
+    async getABooking (req, res, next) {
+        const {id} = req.params
+        try {
+            const data = await db.Order.findOne({ where: { id },
+                include: [
+                    {
+                        model: db.Customer,
+                        as: 'customer',
+                    },
+
+                    {
+                        model: db.TourDay,
+                        as: 'tour_day',
+                        include: 'tour'
+                    },
+
+                    {
+                        model: db.ListValues,
+                        as: 'status',
+                        attributes: ['ele_name', 'ele_id'],
+                        where: {
+                            list_id: { [Op.col]: 'Order.list_status_id' }
+                        }
+                    },
+                    
+                ]
+             })
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 module.exports = new BookingController()

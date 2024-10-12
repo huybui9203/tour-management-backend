@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Tour.belongsToMany(models.Place, {through: models.PlaceTour, foreignKey: 'tour_id', as: 'places'})
       Tour.hasMany(models.Schedule, {foreignKey: 'tour_id'})
-      Tour.hasMany(models.TourDay, {foreignKey:'tour_id'})
+      Tour.hasMany(models.TourDay, {foreignKey:'tour_id', as: 'date'})
       Tour.belongsTo(models.Hotel, {foreignKey: 'hotel_id', targetKey: 'id', as: 'hotel'})
       Tour.belongsTo(models.Restaurant, {foreignKey: 'res_id', targetKey: 'id', as: 'restaurant'})
 
@@ -39,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'Tour',
     timestamps: true,
+    paranoid: true,
   });
   return Tour;
 };

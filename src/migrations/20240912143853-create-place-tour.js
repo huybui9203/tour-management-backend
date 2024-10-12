@@ -17,6 +17,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         primaryKey: true,
       },
+      deletedAt: {
+        allowNull: true,
+        type: Sequelize.DATE
+      }
     });
   },
   async down(queryInterface, Sequelize) {
