@@ -52,6 +52,7 @@ class AuthController {
     async login(req, res) {
         const { email, password } = req.body;
 
+
         if (!email || !password) {
             res.status(400).json({
                 message: "Error while sending data to server",

@@ -37,7 +37,8 @@ class DashboardController {
                 include: [{
                     model: db.Order,
                     as: 'order',
-                    attributes: []
+                    attributes: [],
+                    required: true
                 }],
                 attributes: [
                     
