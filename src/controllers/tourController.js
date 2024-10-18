@@ -178,6 +178,56 @@ class TourController {
             console.log(error);
         }
     }
+    async getListTour(req, res) {
+        try {
+            const list = await db.Tour.findAll({
+                include: [
+                    {
+                        model: db.Place,
+                        as: "places",
+                    },
+                    {
+                        model: db.Schedule,
+                    },
+                    {
+                        model: db.TourDay,
+                        as: "date",
+                    },
+                    {
+                        model: db.Hotel,
+                        as: "hotel",
+                    },
+                    {
+                        model: db.Restaurant,
+                        as: "restaurant",
+                    },
+                    {
+                        model: db.ListValues,
+                        attributes: ["ele_name"],
+                        where: {
+                            list_id: db.Sequelize.col("Tour.list_type_id"),
+                            ele_id: db.Sequelize.col("Tour.type_id"),
+                        },
+                        as: "type",
+                    },
+                    {
+                        model: db.ListValues,
+                        attributes: ["ele_name"],
+                        where: {
+                            list_id: db.Sequelize.col("Tour.list_veh_id"),
+                            ele_id: db.Sequelize.col("Tour.veh_id"),
+                        },
+                        as: "veh",
+                    },
+                ],
+            });
+            res.status(200).json({
+                list: list,
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 }
 
 module.exports = new TourController();

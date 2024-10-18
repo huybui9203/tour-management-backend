@@ -1,9 +1,33 @@
 const { where, Sequelize } = require("sequelize");
 const db = require("../models");
 const dotenv = require("dotenv");
+const querystring = require("qs");
+const crypto = require("crypto");
 const { STATUS_ORDER } = require("../utils/listValues");
 dotenv.config();
 
+const config = {
+    appid: "553",
+    key1: "9phuAOYhan4urywHTh0ndEXiV3pKHr5Q",
+    key2: "Iyz2habzyr7AG8SgvoBCbKwKi3UzlLi3",
+    endpoint: "https://sbgateway.zalopay.vn/api/getlistmerchantbanks",
+};
+
+function sortObject(obj) {
+    let sorted = {};
+    let str = [];
+    let key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            str.push(encodeURIComponent(key));
+        }
+    }
+    str.sort();
+    for (key = 0; key < str.length; key++) {
+        sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+    }
+    return sorted;
+}
 class OrderController {
     async createNewOrder(req, res) {
         const { name, email, address, phone, adult_quantity, child_quantity, adults, childs, deposit } = req.body;
@@ -103,6 +127,69 @@ class OrderController {
             await transaction.rollback();
             console.log(error);
         }
+    }
+
+    async paymentWithVNPay(req, res) {
+        console.log("form", req.body);
+        var ipAddr =
+            req.headers["x-forwarded-for"] ||
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            req.connection.socket.remoteAddress;
+
+        var date = new Date();
+        const dateFormat = (await import("dateformat")).default;
+
+        const now = new Date();
+        now.setMinutes(now.getMinutes()); // Thêm 15 phút vào thời gian hiện tại
+        const year = now.getFullYear().toString();
+        const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Tháng bắt đầu từ 0
+        const day = now.getDate().toString().padStart(2, "0");
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const seconds = now.getSeconds().toString().padStart(2, "0");
+        let createDate = year + month + day + hours + minutes + seconds;
+
+        var orderId = dateFormat(date, "HHmmss");
+        var amount = req.body.amount;
+        var orderInfo = req.body.orderDescription;
+        var orderType = "vnpay";
+
+        var vnp_Params = {};
+        vnp_Params["vnp_Version"] = "2.1.0";
+        vnp_Params["vnp_Command"] = "pay";
+        vnp_Params["vnp_TmnCode"] = process.env.TmnCode;
+        vnp_Params["vnp_Locale"] = "vn";
+        vnp_Params["vnp_CurrCode"] = "VND";
+        vnp_Params["vnp_TxnRef"] = orderId;
+        vnp_Params["vnp_OrderInfo"] = orderInfo;
+        vnp_Params["vnp_OrderType"] = orderType;
+        vnp_Params["vnp_Amount"] = amount * 10000;
+        vnp_Params["vnp_ReturnUrl"] = process.env.Return_Url;
+        vnp_Params["vnp_IpAddr"] = ipAddr;
+        vnp_Params["vnp_CreateDate"] = createDate;
+        vnp_Params = sortObject(vnp_Params);
+
+        var signData = querystring.stringify(vnp_Params, { encode: false });
+
+        var hmac = crypto.createHmac("sha512", process.env.VNPAY_SECRET_KEY);
+        var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+
+        vnp_Params["vnp_SecureHash"] = signed;
+        const vnpUrl = process.env.VNP_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
+        // console.log({
+        //     vnp_Params,
+        //     signData,
+        //     vnpUrl,
+        //     hmac,
+        //     signed,
+        // });
+
+        res.json({ paymentUrl: vnpUrl });
+    }
+
+    async returnVnPay(req, res) {
+        console.log("VNPAY");
     }
 
     async scheduleCancelOrder(req, res) {}
