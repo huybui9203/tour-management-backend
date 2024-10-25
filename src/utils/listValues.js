@@ -1,7 +1,8 @@
 const ROLES = {
-    ID: 3,
+    ID: 4,
     ADMIN: 1,
     USER: 2,
+    S_ADMIN: 3
 };
 
 const STATUS_ORDER = {
@@ -11,4 +12,10 @@ const STATUS_ORDER = {
     CANCELED: 3,
 };
 
-module.exports = { ROLES, STATUS_ORDER };
+const VEHS = {
+    ID: 3,
+    PLANE: 1,
+    BUS: 2,
+}
+
+module.exports = { ROLES, STATUS_ORDER, VEHS };

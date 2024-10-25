@@ -15,12 +15,17 @@ class AccountController {
                             as: 'role',
                             attributes: ['ele_name', 'ele_id'],
                             where: {
-                                list_id: { [Op.col]: 'Account.list_role_id' }
+                                list_id: { [Op.col]: 'Account.list_role_id' },
                             },
                             required: true
                         },
                         
                     ],
+                    where: {
+                        role_id: {
+                            [Op.ne]: ROLES.S_ADMIN
+                        }
+                    },
                     attributes: ['id', 'username', 'email', 'password']
                 }
             )

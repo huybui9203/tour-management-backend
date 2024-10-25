@@ -100,6 +100,21 @@ class DashboardController {
 
         
     }
+
+    async getProfile(req, res,next) {
+        const accessToken = req.cookies['access_token']
+        let id
+        jwt.verify(accessToken, process.env.JWT_SECRET_KEY, (err, decoded) => {
+            id = decoded.id
+        })
+        try {
+            const data = await db.Account.findOne({where: {id}})
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+
+    }
 }
 
 module.exports = new DashboardController()

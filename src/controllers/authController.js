@@ -72,6 +72,7 @@ class AuthController {
                 ],
                 where: {
                     email: email,
+                    role_id: ROLES.USER //only customer
                 },
             });
 
@@ -110,7 +111,7 @@ class AuthController {
             });
 
             res.status(200).json({
-                role: role.ele_name,
+                role: role.ele_id,
                 username: account.username,
                 message: "Login successfully",
             });

@@ -19,6 +19,18 @@ class ResController {
     //         console.log(error)
     //     }
     // }
+
+
+    async getTourDays(req, res, next) {
+        try {
+            const data = await db.TourDay.findAll()
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+
     async getAll(req, res) {
         try {
             const data = await db.Tour.findAll({

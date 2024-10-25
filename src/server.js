@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/connectDB");
 const route = require("./routes");
 require("dotenv").config();
+const resController = require('./controllers/resController')
 
 const app = express();
 const port = process.env.PORT || 6969;
@@ -30,6 +31,7 @@ app.get("/status", (req, res) => {
         message: "successfull",
     });
 });
+
 
 app.listen(port, () => {
     console.log(`app listening on port ${port}`);
