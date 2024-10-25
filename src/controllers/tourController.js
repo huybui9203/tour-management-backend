@@ -7,6 +7,7 @@ class TourController {
     // Get details tour
     async getDetailsTour(req, res) {
         const { id } = req.params;
+
         if (!id) {
             res.status(400).json({
                 message: "Incompleted data",
@@ -38,24 +39,8 @@ class TourController {
                         model: db.Restaurant,
                         as: "restaurant",
                     },
-                    {
-                        model: db.ListValues,
-                        attributes: ["ele_name"],
-                        where: {
-                            list_id: db.Sequelize.col("Tour.list_type_id"),
-                            ele_id: db.Sequelize.col("Tour.type_id"),
-                        },
-                        as: "type",
-                    },
-                    {
-                        model: db.ListValues,
-                        attributes: ["ele_name"],
-                        where: {
-                            list_id: db.Sequelize.col("Tour.list_veh_id"),
-                            ele_id: db.Sequelize.col("Tour.veh_id"),
-                        },
-                        as: "veh",
-                    },
+                    { model: db.ListValues, as: "list_types" },
+                    { model: db.ListValues, as: "list_veh" },
                 ],
             });
 
@@ -201,24 +186,8 @@ class TourController {
                         model: db.Restaurant,
                         as: "restaurant",
                     },
-                    {
-                        model: db.ListValues,
-                        attributes: ["ele_name"],
-                        where: {
-                            list_id: db.Sequelize.col("Tour.list_type_id"),
-                            ele_id: db.Sequelize.col("Tour.type_id"),
-                        },
-                        as: "type",
-                    },
-                    {
-                        model: db.ListValues,
-                        attributes: ["ele_name"],
-                        where: {
-                            list_id: db.Sequelize.col("Tour.list_veh_id"),
-                            ele_id: db.Sequelize.col("Tour.veh_id"),
-                        },
-                        as: "veh",
-                    },
+                    { model: db.ListValues, as: "list_types" },
+                    { model: db.ListValues, as: "list_veh" },
                 ],
             });
             res.status(200).json({

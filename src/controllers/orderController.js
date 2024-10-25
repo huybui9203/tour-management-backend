@@ -30,15 +30,19 @@ function sortObject(obj) {
 }
 class OrderController {
     async createNewOrder(req, res) {
-        const { name, email, address, phone, adult_quantity, child_quantity, adults, childs, deposit } = req.body;
-        const { idTour } = req.params;
+        const { name, email, address, phone, adult_quantity, child_quantity, adults, childs, deposit, total_price } =
+            req.body;
         const transaction = await db.sequelize.transaction();
+        const { idTour } = req.params;
+        console.log(req.body);
+
         try {
             const tourDay = await db.TourDay.findOne({
                 where: {
                     id: idTour,
                 },
             });
+
             const tour = await db.Tour.findOne({
                 where: {
                     id: tourDay.tour_id,
@@ -78,10 +82,6 @@ class OrderController {
                 await existCustomer.save();
             }
 
-            const total_price = [...adults, ...childs].reduce((acc, curr) => {
-                return (acc += curr.price);
-            }, 0);
-
             const room_count = adults.reduce((acc, curr) => {
                 return curr.isBookingSingleRoom && acc + 1;
             }, 0);
@@ -92,8 +92,8 @@ class OrderController {
                     deposit: deposit,
                     order_date: Date.now(),
                     number_of_people: adult_quantity + child_quantity,
-                    children_count: adult_quantity,
-                    adults_count: child_quantity,
+                    children_count: child_quantity,
+                    adults_count: adult_quantity,
                     room_count: room_count,
                     tour_day_id: idTour,
                     cust_id: existCustomer.id,
@@ -106,7 +106,7 @@ class OrderController {
             const registants = [...adults, ...childs].map((registant) => ({
                 name: registant.name,
                 sex: registant.sex === "MALE" ? true : false,
-                date_of_birth: registant.birthday,
+                date_of_birth: new Date(registant.birthday),
                 price_for_one: registant.price,
                 order_id: newOrder.id,
             }));
@@ -119,9 +119,9 @@ class OrderController {
             await tour.save();
 
             await transaction.commit();
-
             res.status(200).json({
                 message: "Create new order successfully!!!",
+                idOrder: newOrder.id,
             });
         } catch (error) {
             await transaction.rollback();
@@ -130,69 +130,111 @@ class OrderController {
     }
 
     async paymentWithVNPay(req, res) {
-        console.log("form", req.body);
-        var ipAddr =
-            req.headers["x-forwarded-for"] ||
-            req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
+        try {
+            var ipAddr =
+                req.headers["x-forwarded-for"] ||
+                req.connection.remoteAddress ||
+                req.socket.remoteAddress ||
+                req.connection.socket.remoteAddress;
 
-        var date = new Date();
-        const dateFormat = (await import("dateformat")).default;
+            var date = new Date();
+            const dateFormat = (await import("dateformat")).default;
 
-        const now = new Date();
-        now.setMinutes(now.getMinutes()); // Thêm 15 phút vào thời gian hiện tại
-        const year = now.getFullYear().toString();
-        const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Tháng bắt đầu từ 0
-        const day = now.getDate().toString().padStart(2, "0");
-        const hours = now.getHours().toString().padStart(2, "0");
-        const minutes = now.getMinutes().toString().padStart(2, "0");
-        const seconds = now.getSeconds().toString().padStart(2, "0");
-        let createDate = year + month + day + hours + minutes + seconds;
+            const now = new Date();
+            now.setMinutes(now.getMinutes()); // Thêm 15 phút vào thời gian hiện tại
+            const year = now.getFullYear().toString();
+            const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Tháng bắt đầu từ 0
+            const day = now.getDate().toString().padStart(2, "0");
+            const hours = now.getHours().toString().padStart(2, "0");
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+            const seconds = now.getSeconds().toString().padStart(2, "0");
+            let createDate = year + month + day + hours + minutes + seconds;
 
-        var orderId = dateFormat(date, "HHmmss");
-        var amount = req.body.amount;
-        var orderInfo = req.body.orderDescription;
-        var orderType = "vnpay";
+            var orderId = dateFormat(date, "HHmmss");
+            var amount = req.body.amount;
+            var orderType = "vnpay";
+            var orderInfo = req.body.orderDescription;
+            var vnp_Params = {};
+            vnp_Params["vnp_Version"] = "2.1.0";
+            vnp_Params["vnp_Command"] = "pay";
+            vnp_Params["vnp_TmnCode"] = process.env.TmnCode;
+            vnp_Params["vnp_Locale"] = "vn";
+            vnp_Params["vnp_CurrCode"] = "VND";
+            vnp_Params["vnp_TxnRef"] = orderId;
+            vnp_Params["vnp_OrderInfo"] = orderInfo;
+            vnp_Params["vnp_OrderType"] = orderType;
+            vnp_Params["vnp_Amount"] = parseInt(amount) * 100;
+            vnp_Params["vnp_ReturnUrl"] = `${process.env.RETURN_URL}/${req.body.idOrder}`;
+            vnp_Params["vnp_IpAddr"] = ipAddr;
+            vnp_Params["vnp_CreateDate"] = createDate;
+            vnp_Params = sortObject(vnp_Params);
 
-        var vnp_Params = {};
-        vnp_Params["vnp_Version"] = "2.1.0";
-        vnp_Params["vnp_Command"] = "pay";
-        vnp_Params["vnp_TmnCode"] = process.env.TmnCode;
-        vnp_Params["vnp_Locale"] = "vn";
-        vnp_Params["vnp_CurrCode"] = "VND";
-        vnp_Params["vnp_TxnRef"] = orderId;
-        vnp_Params["vnp_OrderInfo"] = orderInfo;
-        vnp_Params["vnp_OrderType"] = orderType;
-        vnp_Params["vnp_Amount"] = amount * 10000;
-        vnp_Params["vnp_ReturnUrl"] = process.env.Return_Url;
-        vnp_Params["vnp_IpAddr"] = ipAddr;
-        vnp_Params["vnp_CreateDate"] = createDate;
-        vnp_Params = sortObject(vnp_Params);
+            var signData = querystring.stringify(vnp_Params, { encode: false });
 
-        var signData = querystring.stringify(vnp_Params, { encode: false });
+            var hmac = crypto.createHmac("sha512", process.env.VNPAY_SECRET_KEY);
+            var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
-        var hmac = crypto.createHmac("sha512", process.env.VNPAY_SECRET_KEY);
-        var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+            vnp_Params["vnp_SecureHash"] = signed;
+            const vnpUrl = process.env.VNP_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
 
-        vnp_Params["vnp_SecureHash"] = signed;
-        const vnpUrl = process.env.VNP_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
-        // console.log({
-        //     vnp_Params,
-        //     signData,
-        //     vnpUrl,
-        //     hmac,
-        //     signed,
-        // });
-
-        res.json({ paymentUrl: vnpUrl });
+            res.json({ paymentUrl: vnpUrl });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async returnVnPay(req, res) {
-        console.log("VNPAY");
+        var vnp_Params = req.query;
+        const { id } = req.params;
+        var secureHash = vnp_Params["vnp_SecureHash"];
+
+        delete vnp_Params["vnp_SecureHash"];
+        delete vnp_Params["vnp_SecureHashType"];
+
+        vnp_Params = sortObject(vnp_Params);
+
+        var tmnCode = process.env.TmnCode;
+        var secretKey = process.env.VNPAY_SECRET_KEY;
+
+        var signData = querystring.stringify(vnp_Params, { encode: false });
+        var hmac = crypto.createHmac("sha512", secretKey);
+        var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+
+        if (secureHash === signed) {
+            const order = await db.Order.findOne({
+                where: {
+                    id: id,
+                },
+            });
+            await order.update({
+                list_status_id: STATUS_ORDER.ID,
+                status_id: STATUS_ORDER.COMPLETED,
+                pay_date: new Date(),
+            });
+            await order.save();
+            console.log(order);
+
+            res.redirect("http://localhost:3000/payment-success");
+        } else {
+            res.status(200).json({
+                message: "Lỗi thanh toán",
+            });
+        }
     }
 
-    async scheduleCancelOrder(req, res) {}
+    async scheduleCancelOrder(idOrder) {
+        const order = await db.Order.findOne({
+            where: {
+                id: idOrder,
+            },
+        });
+
+        await order.update({
+            list_status_id: STATUS_ORDER.ID,
+            status_id: STATUS_ORDER.CANCELED,
+        });
+        await order.save();
+    }
 
     async getHistory(req, res) {
         const idAccount = req.user;
