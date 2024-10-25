@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       Tour.belongsToMany(models.Place, {through: models.PlaceTour, foreignKey: 'tour_id', as: 'places'})
       Tour.hasMany(models.Schedule, {foreignKey: 'tour_id'})
       Tour.hasMany(models.TourDay, {foreignKey:'tour_id', as: 'date'})
+      Tour.hasMany(models.Image, {foreignKey:'tour_id', as: 'images'})
       Tour.belongsTo(models.Hotel, {foreignKey: 'hotel_id', targetKey: 'id', as: 'hotel'})
       Tour.belongsTo(models.Restaurant, {foreignKey: 'res_id', targetKey: 'id', as: 'restaurant'})
 

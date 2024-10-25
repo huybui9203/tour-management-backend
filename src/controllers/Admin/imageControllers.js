@@ -3,7 +3,7 @@ const { where, Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const { ROLES, VEHS } = require('../../utils/listValues');
 const bcryptjs = require('bcryptjs')
-class AccountController {
+class ImageController {
     async getTours(req, res, next) {
         try {
             const data = await db.Tour.findAll(
@@ -30,7 +30,6 @@ class AccountController {
                         },
                         
                     ],
-                
                     
                 }
             )
@@ -61,7 +60,7 @@ class AccountController {
                     {
                         model: db.Image,
                         as: 'images',
-                        attributes: ['img_url', 'id']
+                        attributes: ['img_url']
                     },
                     
                 ],
@@ -73,11 +72,11 @@ class AccountController {
         }
     }
 
-    async createTour(req, res, next) {
-        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, adultsPrice, childrenPrice, promo, status, description} = req.body
-        const formData = {name, departure_point: departurePoint, destination, list_veh_id: VEHS.ID, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price: adultsPrice, promo, status, description}
+    async createTourImage(req, res, next) {
+        const {imgURL} = req.body
+        const {id} = req.params
         try {
-            const data = await db.Tour.create(formData);
+            const data = await db.Image.create({img_url: imgURL, tour_id: id});
             res.json(data)
         } catch (error) {
             next(error)
@@ -85,8 +84,8 @@ class AccountController {
     }
 
     async updateTour(req, res,next) {
-        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, adultsPrice, childrenPrice, promo, status, description} = req.body
-        const formData = {name, departure_point: departurePoint, destination, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price: adultsPrice, promo, status, description}
+        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, adultsPrice, childrenPrice, promo, status, description, imgURL} = req.body
+        const formData = {name, departure_point: departurePoint, destination, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price: adultsPrice, promo, status, description, img_url: imgURL}
         const {id} = req.params
         try {
             const data = await db.Tour.update(
@@ -103,10 +102,10 @@ class AccountController {
         
     }
 
-    async deleteTour(req, res,next) {
+    async deleteTourImage(req, res,next) {
         const {id} = req.params
         try {
-            const data = await db.Tour.destroy({
+            const data = await db.Image.destroy({
                 where: {
                   id,
                 },
@@ -136,8 +135,6 @@ class AccountController {
             next(error)
         }
     }
-
-    
 }
 
-module.exports = new AccountController()
+module.exports = new ImageController()
