@@ -57,14 +57,21 @@ class AccountController {
                         model: db.TourDay,
                         as: 'date',
                     },
-
+                    
                     {
                         model: db.Image,
                         as: 'images',
                         attributes: ['img_url', 'id']
                     },
+
+                    {
+                        model: db.Schedule,
+                        as: 'schedules',
+                    },
                     
                 ],
+
+                
                 
              })
             res.json(data)
@@ -132,6 +139,49 @@ class AccountController {
         try {
             const data = await db.TourDay.findAll({where: {tour_id:id}})
             res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async createTourSchedule(req, res, next) {
+        const {day, description} =req.body
+        const {id} = req.params
+        try {
+            const data = await db.Schedule.create({day, description, tour_id: id})
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async deleteScheduleTour(req, res,next) {
+        const {id} = req.params
+        try {
+            const data = await db.Schedule.destroy({
+                where: {
+                  id,
+                },
+              });
+            res.json({
+                msg: 'remove' + id
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async deleteTourDay(req, res,next) {
+        const {id} = req.params
+        try {
+            const data = await db.TourDay.destroy({
+                where: {
+                  id,
+                },
+              });
+            res.json({
+                msg: 'remove' + id
+            })
         } catch (error) {
             next(error)
         }
