@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class Tour extends Model {
     static associate(models) {
       Tour.belongsToMany(models.Place, {through: models.PlaceTour, foreignKey: 'tour_id', as: 'places'})
-      Tour.hasMany(models.Schedule, {foreignKey: 'tour_id'})
+      Tour.hasMany(models.Schedule, {foreignKey: 'tour_id', as: 'schedules'})
       Tour.hasMany(models.TourDay, {foreignKey:'tour_id', as: 'date'})
       Tour.hasMany(models.Image, {foreignKey:'tour_id', as: 'images'})
       Tour.belongsTo(models.Hotel, {foreignKey: 'hotel_id', targetKey: 'id', as: 'hotel'})

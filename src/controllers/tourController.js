@@ -26,6 +26,7 @@ class TourController {
                     },
                     {
                         model: db.Schedule,
+                        as: 'schedules'
                     },
                     {
                         model: db.TourDay,
@@ -34,6 +35,10 @@ class TourController {
                     {
                         model: db.Hotel,
                         as: "hotel",
+                    },
+                    {
+                        model: db.Image,
+                        as: "images",
                     },
                     {
                         model: db.Restaurant,
@@ -188,6 +193,7 @@ class TourController {
                     },
                     {
                         model: db.Schedule,
+                        as: 'schedules'
                     },
                     {
                         model: db.TourDay,
@@ -200,6 +206,11 @@ class TourController {
                     {
                         model: db.Restaurant,
                         as: "restaurant",
+                    },
+
+                    {
+                        model: db.Image,
+                        as: "images",
                     },
                     { model: db.ListValues, as: "list_types" },
                     { model: db.ListValues, as: "list_veh" },
