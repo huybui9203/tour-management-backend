@@ -145,25 +145,40 @@ class TourController {
         try {
             const listTours = await db.Tour.findAll({
                 where: conditionFilter,
-                include: {
-                    model: db.ListValues,
-                    attributes: ["ele_name"],
-                    where: {
-                        list_id: db.Sequelize.col("Tour.list_veh_id"),
-                        ele_id: db.Sequelize.col("Tour.veh_id"),
+                include: [
+                    {
+                        model: db.Place,
+                        as: "places",
                     },
-                    as: "veh",
-                },
+                    {
+                        model: db.Schedule,
+                    },
+                    {
+                        model: db.TourDay,
+                        as: "date",
+                    },
+                    {
+                        model: db.Hotel,
+                        as: "hotel",
+                    },
+                    {
+                        model: db.Restaurant,
+                        as: "restaurant",
+                    },
+                    { model: db.ListValues, as: "list_types" },
+                    { model: db.ListValues, as: "list_veh" },
+                ],
             });
 
             res.status(200).json({
-                listTours: listTours,
+                list: listTours,
             });
         } catch (error) {
             console.log(error);
         }
     }
     async getListTour(req, res) {
+        const { page } = req.query;
         try {
             const list = await db.Tour.findAll({
                 include: [
