@@ -157,6 +157,7 @@ class TourController {
                     },
                     {
                         model: db.Schedule,
+                        as: 'schedules'
                     },
                     {
                         model: db.TourDay,
