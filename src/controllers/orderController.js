@@ -60,18 +60,15 @@ async function scheduleCancelOrder(idOrder) {
         await tour.update({
             number_of_guests: tour.number_of_guests + order.number_of_people,
         });
+        await tour.save();
 
-        return res.status(200).json({
-            message: "Cancel order dont pay",
-        });
+        return;
     }
-    return res.status(200).json({
-        message: "Order was paid",
-    });
+    return;
 }
 
 function cronTaskCancelOrder(idOrder) {
-    const task = cron.schedule("*/1 * * * *", () => {
+    const task = cron.schedule("*/5 * * * *", () => {
         scheduleCancelOrder(idOrder);
         task.stop();
     });
@@ -103,7 +100,7 @@ class OrderController {
             });
             console.log(tour);
 
-            if (adult_quantity + child_quantity > tour.number_of_guests && tour.number_of_guests > 0) {
+            if (adult_quantity + child_quantity > tour.number_of_guests || tour.number_of_guests <= 0) {
                 res.status(400).json({
                     message: "Exceed the number of people",
                 });
@@ -233,16 +230,6 @@ class OrderController {
 
             vnp_Params["vnp_SecureHash"] = signed;
             const vnpUrl = process.env.VNP_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
-            setTimeout(() => {
-                new Promise(async (resolve, reject) => {
-                    try {
-                        await this.scheduleCancelOrder();
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            }, 3 * 1000 * 60);
             res.json({ paymentUrl: vnpUrl });
         } catch (error) {
             console.log(error);
@@ -266,11 +253,23 @@ class OrderController {
         var hmac = crypto.createHmac("sha512", secretKey);
         var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
+        const order = await db.Order.findOne({
+            where: { id: id },
+        });
+        const tourDay = await db.TourDay.findOne({
+            where: {
+                id: order.tour_day_id,
+            },
+        });
+
+        const tour = await db.Tour.findOne({
+            where: {
+                id: tourDay.tour_id,
+            },
+        });
+
         if (secureHash === signed) {
             if (responseCode === "00") {
-                const order = await db.Order.findOne({
-                    where: { id: id },
-                });
                 await order.update({
                     list_status_id: STATUS_ORDER.ID,
                     status_id: STATUS_ORDER.COMPLETED,
@@ -280,6 +279,16 @@ class OrderController {
 
                 res.redirect("http://localhost:3000/payment-success");
             } else {
+                await order.update({
+                    list_status_id: STATUS_ORDER.ID,
+                    status_id: STATUS_ORDER.CANCELED,
+                });
+                await order.save();
+
+                await tour.update({
+                    number_of_guests: tour.number_of_guests + order.number_of_people,
+                });
+                await tour.save();
                 res.redirect("http://localhost:3000/payment-failed");
             }
         } else {
