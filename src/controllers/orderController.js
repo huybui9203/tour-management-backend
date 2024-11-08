@@ -3,6 +3,7 @@ const db = require("../models");
 const dotenv = require("dotenv");
 const querystring = require("qs");
 const crypto = require("crypto");
+const cron = require("node-cron");
 const { STATUS_ORDER } = require("../utils/listValues");
 dotenv.config();
 
@@ -28,13 +29,65 @@ function sortObject(obj) {
     }
     return sorted;
 }
+
+async function scheduleCancelOrder(idOrder) {
+    const order = await db.Order.findOne({
+        where: {
+            id: idOrder,
+        },
+    });
+
+    const tourDay = await db.TourDay.findOne({
+        where: {
+            id: order.tour_day_id,
+        },
+    });
+
+    const tour = await db.Tour.findOne({
+        where: {
+            id: tourDay.tour_id,
+        },
+    });
+
+    const isPaid = order.pay_date !== null && order.pay_date !== "";
+    if (!isPaid) {
+        await order.update({
+            list_status_id: STATUS_ORDER.ID,
+            status_id: STATUS_ORDER.CANCELED,
+        });
+        await order.save();
+
+        await tour.update({
+            number_of_guests: tour.number_of_guests + order.number_of_people,
+        });
+
+        return res.status(200).json({
+            message: "Cancel order dont pay",
+        });
+    }
+    return res.status(200).json({
+        message: "Order was paid",
+    });
+}
+
+function cronTaskCancelOrder(idOrder) {
+    const task = cron.schedule("*/1 * * * *", () => {
+        scheduleCancelOrder(idOrder);
+        task.stop();
+    });
+
+    task.start();
+}
 class OrderController {
     async createNewOrder(req, res) {
-        const { name, email, address, phone, adult_quantity, child_quantity, adults, childs, deposit, total_price } =
-            req.body;
+        const { name, email, address, phone, adult_quantity, child_quantity, adults, childs } = req.body;
         const transaction = await db.sequelize.transaction();
         const { idTour } = req.params;
-        console.log(req.body);
+        console.log(idTour);
+
+        const total_price = [...adults, ...childs].reduce((acc, curr) => {
+            return (acc += curr.price);
+        }, 0);
 
         try {
             const tourDay = await db.TourDay.findOne({
@@ -48,14 +101,13 @@ class OrderController {
                     id: tourDay.tour_id,
                 },
             });
+            console.log(tour);
 
-            if (tour.updateAt >= Date.now()) {
-                if (adult_quantity + child_quantity > tour.number_of_guests) {
-                    res.status(400).json({
-                        message: "Exceed the number of people",
-                    });
-                    return;
-                }
+            if (adult_quantity + child_quantity > tour.number_of_guests && tour.number_of_guests > 0) {
+                res.status(400).json({
+                    message: "Exceed the number of people",
+                });
+                return;
             }
 
             let existCustomer = await db.Customer.findOne({
@@ -89,7 +141,7 @@ class OrderController {
             const newOrder = await db.Order.create(
                 {
                     total_price: total_price,
-                    deposit: deposit,
+                    deposit: Math.round(total_price * 0.2),
                     order_date: Date.now(),
                     number_of_people: adult_quantity + child_quantity,
                     children_count: child_quantity,
@@ -113,12 +165,17 @@ class OrderController {
 
             await db.Participant.bulkCreate(registants, { transaction: transaction });
 
-            await tour.update({
-                number_of_guests: tour.number_of_guests - (adult_quantity + child_quantity),
-            });
+            await tour.update(
+                {
+                    number_of_guests: tour.number_of_guests - (adult_quantity + child_quantity),
+                },
+                { transaction: transaction }
+            );
             await tour.save();
 
             await transaction.commit();
+            cronTaskCancelOrder(newOrder.id);
+
             res.status(200).json({
                 message: "Create new order successfully!!!",
                 idOrder: newOrder.id,
@@ -176,7 +233,16 @@ class OrderController {
 
             vnp_Params["vnp_SecureHash"] = signed;
             const vnpUrl = process.env.VNP_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
-
+            setTimeout(() => {
+                new Promise(async (resolve, reject) => {
+                    try {
+                        await this.scheduleCancelOrder();
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                });
+            }, 3 * 1000 * 60);
             res.json({ paymentUrl: vnpUrl });
         } catch (error) {
             console.log(error);
@@ -187,6 +253,7 @@ class OrderController {
         var vnp_Params = req.query;
         const { id } = req.params;
         var secureHash = vnp_Params["vnp_SecureHash"];
+        var responseCode = vnp_Params["vnp_ResponseCode"];
 
         delete vnp_Params["vnp_SecureHash"];
         delete vnp_Params["vnp_SecureHashType"];
@@ -195,45 +262,31 @@ class OrderController {
 
         var tmnCode = process.env.TmnCode;
         var secretKey = process.env.VNPAY_SECRET_KEY;
-
         var signData = querystring.stringify(vnp_Params, { encode: false });
         var hmac = crypto.createHmac("sha512", secretKey);
         var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
         if (secureHash === signed) {
-            const order = await db.Order.findOne({
-                where: {
-                    id: id,
-                },
-            });
-            await order.update({
-                list_status_id: STATUS_ORDER.ID,
-                status_id: STATUS_ORDER.COMPLETED,
-                pay_date: new Date(),
-            });
-            await order.save();
-            console.log(order);
+            if (responseCode === "00") {
+                const order = await db.Order.findOne({
+                    where: { id: id },
+                });
+                await order.update({
+                    list_status_id: STATUS_ORDER.ID,
+                    status_id: STATUS_ORDER.COMPLETED,
+                    pay_date: new Date(),
+                });
+                await order.save();
 
-            res.redirect("http://localhost:3000/payment-success");
+                res.redirect("http://localhost:3000/payment-success");
+            } else {
+                res.redirect("http://localhost:3000/payment-failed");
+            }
         } else {
-            res.status(200).json({
+            res.status(403).json({
                 message: "Lỗi thanh toán",
             });
         }
-    }
-
-    async scheduleCancelOrder(idOrder) {
-        const order = await db.Order.findOne({
-            where: {
-                id: idOrder,
-            },
-        });
-
-        await order.update({
-            list_status_id: STATUS_ORDER.ID,
-            status_id: STATUS_ORDER.CANCELED,
-        });
-        await order.save();
     }
 
     async getHistory(req, res) {
@@ -295,6 +348,67 @@ class OrderController {
             res.status(200).json({
                 list: orders,
             });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async refundVnpay(idOrder, idVnpay, req, res) {
+        try {
+            const order = await db.Order.findOne({
+                where: {
+                    id: idOrder,
+                },
+            });
+
+            var ipAddr =
+                req.headers["x-forwarded-for"] ||
+                req.connection.remoteAddress ||
+                req.socket.remoteAddress ||
+                req.connection.socket.remoteAddress;
+
+            var date = new Date();
+            const dateFormat = (await import("dateformat")).default;
+
+            const now = new Date();
+            now.setMinutes(now.getMinutes()); // Thêm 15 phút vào thời gian hiện tại
+            const year = now.getFullYear().toString();
+            const month = (now.getMonth() + 1).toString().padStart(2, "0"); // Tháng bắt đầu từ 0
+            const day = now.getDate().toString().padStart(2, "0");
+            const hours = now.getHours().toString().padStart(2, "0");
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+            const seconds = now.getSeconds().toString().padStart(2, "0");
+            let createDate = year + month + day + hours + minutes + seconds;
+
+            var orderId = dateFormat(date, "HHmmss");
+            var orderType = "vnpay";
+            var vnp_Params = {};
+            vnp_Params["vnp_Version"] = "2.1.0";
+            vnp_Params["vnp_Command"] = "refund";
+            vnp_Params["vnp_TmnCode"] = process.env.TmnCode;
+            vnp_Params["vnp_TransactionNo"] = idVnpay;
+            vnp_Params["vnp_TransactionType"] = 3;
+            vnp_Params["vnp_Locale"] = "vn";
+            vnp_Params["vnp_CurrCode"] = "VND";
+            vnp_Params["vnp_TxnRef"] = orderId;
+            vnp_Params["vnp_OrderInfo"] = `Refund order ID: ${order.id}`;
+            vnp_Params["vnp_OrderType"] = orderType;
+            vnp_Params["vnp_Amount"] = order.total_price;
+            vnp_Params["vnp_ReturnUrl"] = `${process.env.RETURN_URL}/${req.body.idOrder}`;
+            vnp_Params["vnp_IpAddr"] = ipAddr;
+            vnp_Params["vnp_CreateDate"] = createDate;
+
+            vnp_Params = sortObject(vnp_Params);
+
+            var signData = querystring.stringify(vnp_Params, { encode: false });
+
+            var hmac = crypto.createHmac("sha512", process.env.VNPAY_SECRET_KEY);
+            var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+
+            vnp_Params["vnp_SecureHash"] = signed;
+            const vnpUrl = process.env.VNP_REFUND_URL + "?" + querystring.stringify(vnp_Params, { encode: false });
+
+            res.json({ paymentUrl: vnpUrl });
         } catch (error) {
             console.log(error);
         }
