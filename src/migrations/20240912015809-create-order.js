@@ -12,19 +12,10 @@ module.exports = {
       total_price: {
         type: Sequelize.FLOAT
       },
-      deposit: {
-        type: Sequelize.FLOAT
-      },
       order_date: {
         type: Sequelize.DATE
       },
       number_of_people: {
-        type: Sequelize.INTEGER
-      },
-      children_count: {
-        type: Sequelize.INTEGER
-      },
-      adults_count: {
         type: Sequelize.INTEGER
       },
       pay_date: {
@@ -32,9 +23,6 @@ module.exports = {
       },
       rooms_count: {
         type: Sequelize.INTEGER
-      },
-      rating: {
-        type:Sequelize.FLOAT
       },
       employee_id: {
         type: Sequelize.INTEGER
@@ -50,6 +38,9 @@ module.exports = {
       }, 
       status_id: {
         type: Sequelize.INTEGER
+      },
+      note: {
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,

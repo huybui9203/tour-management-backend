@@ -18,7 +18,7 @@ module.exports = {
       address: {
         type: Sequelize.STRING
       },
-      identity: {
+      email: {
         type: Sequelize.STRING
       },
       age: {

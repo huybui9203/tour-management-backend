@@ -113,6 +113,7 @@ class AuthController {
             res.status(200).json({
                 role: role.ele_id,
                 username: account.username,
+                id: account.id,
                 message: "Login successfully",
             });
         } catch (error) {
@@ -210,8 +211,9 @@ class AuthController {
             
 
             res.status(200).json({
-                role: role.ele_name || "customer",
+                role: role.ele_id,
                 username: account.username,
+                id: account.id,
                 message: "Login successfully",
             });
         } catch (error) {
@@ -271,8 +273,9 @@ class AuthController {
             });
 
             res.status(200).json({
-                role: role.ele_name,
+                role: role.ele_id,
                 username: account.username,
+                id: account.id,
                 message: "Login successfully",
             });
         } catch (error) {

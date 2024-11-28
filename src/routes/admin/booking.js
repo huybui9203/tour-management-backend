@@ -8,6 +8,7 @@ router.get('/bookings',adminAuthMiddleware, bookingController.getBookingCustomer
 router.post('/bookings/:id',adminAuthMiddleware, bookingController.updateBooking)
 router.delete('/bookings/:id',adminAuthMiddleware, bookingController.deleteBooking)
 router.get('/bookings/:id', adminAuthMiddleware,bookingController.getABooking)
+router.post('/bookings', adminAuthMiddleware,bookingController.createBooking)
 
 
 module.exports = router

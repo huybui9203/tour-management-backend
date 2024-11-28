@@ -109,11 +109,28 @@ class DashboardController {
         })
         try {
             const data = await db.Account.findOne({where: {id}})
-            res.json(data)
+            return res.json(data)
         } catch (error) {
             next(error)
         }
 
+    }
+
+    async getMostTourLiked(req, res, next) {
+        try {
+            const list = await db.CusFavorTour.findAll({ 
+                attributes: [ 
+                    'tour_id',
+                    [db.sequelize.fn('COUNT', db.sequelize.col('id')), 'likeCount'] 
+                ], 
+                group: ['tour_id'], 
+                order: [[db.sequelize.fn('COUNT', db.sequelize.col('id')), 'DESC']], 
+                limit: 5
+            })
+            res.json(list)
+        } catch (error) {
+            next(error)
+        }
     }
 }
 

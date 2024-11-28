@@ -18,6 +18,12 @@ module.exports = {
       tour_id: {
         type: Sequelize.INTEGER
       },
+      remain_seats: {
+        type: Sequelize.INTEGER
+      },
+      promo: {
+        type: Sequelize.FLOAT
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

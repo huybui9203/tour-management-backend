@@ -18,9 +18,6 @@ module.exports = {
       price: {
         type: Sequelize.FLOAT
       },
-      promo: {
-        type: Sequelize.FLOAT
-      },
       number_of_guests: {
         type: Sequelize.INTEGER
       },
@@ -33,36 +30,15 @@ module.exports = {
       destination: {
         type: Sequelize.STRING
       },
-      img_url: {
-        type: Sequelize.STRING
-      },
-      rating: {
-        type: Sequelize.FLOAT
-      },
       status: {
         type: Sequelize.BOOLEAN
       },
-      res_id: {
-        type: Sequelize.INTEGER
-      },
-      hotel_id: {
-        type: Sequelize.INTEGER
-      },
-      list_type_id: {
-        type: Sequelize.INTEGER
-      },
-      type_id: {
-        type: Sequelize.INTEGER
-      },
-
       list_veh_id: {
         type: Sequelize.INTEGER
       },
-
       veh_id: {
         type: Sequelize.INTEGER
       },
-
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

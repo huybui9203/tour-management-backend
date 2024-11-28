@@ -1,7 +1,7 @@
 const db = require('../../models')
 const { where, Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
-const { ROLES } = require('../../utils/listValues');
+const { ROLES, STATUS_ORDER } = require('../../utils/listValues');
 
 class BookingController {
     async getBookingCustomer(req, res, next) {
@@ -42,8 +42,9 @@ class BookingController {
     async updateBooking(req, res,next) {
         const {orderId, statusId} = req.body
         try {
+            const dataUpdate = statusId == STATUS_ORDER.COMPLETED ? {status_id: statusId, pay_date: new Date()} : {status_id: statusId}
             const data = await db.Order.update(
-                { status_id: statusId },
+                dataUpdate,
                 { where: {
                     id: orderId
                 } }
@@ -101,6 +102,37 @@ class BookingController {
              })
             res.json(data)
         } catch (error) {
+            next(error)
+        }
+    }
+
+    async createBooking(req, res, next) {
+        const {id, roomCount, customer, participants, note} = req.body
+        const transaction = await db.sequelize.transaction();
+        try {
+            const priceForSingleRoom = 1500000
+            let totalPrice = participants.reduce((acc, curr) => {
+                return acc + curr.price
+            }, 0)
+            totalPrice += roomCount * priceForSingleRoom
+            const custData = await db.Customer.create({name: customer.name,phone_number:customer.phone, address:customer.address , email: customer.email}, { transaction: transaction })
+            const order = await db.Order.create({total_price:totalPrice , order_date: new Date(), pay_date: new Date(), number_of_people: participants.length, rooms_count: roomCount, cust_id: custData.id, tour_day_id: id, list_status_id: 1, status_id: 1, note}, { transaction: transaction })
+            const participantData = participants.map(item => {
+                return {
+                    name: item.name,
+                    sex: item.sex,
+                    date_of_birth: item.birthday,
+                    price_for_one: item.price,
+                    order_id: order.id
+                }
+            })
+            await db.Participant.bulkCreate(participantData, { transaction: transaction })
+            await transaction.commit();
+            res.json({
+                msg: 'success'
+            })
+        } catch (error) {
+            await transaction.rollback();
             next(error)
         }
     }

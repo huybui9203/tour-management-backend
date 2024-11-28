@@ -47,11 +47,13 @@ class AccountController {
         }        
     }
     async updateAccount(req, res,next) {
-        const {username, role} = req.body
+        const {username, role, password} = req.body
         const {id} = req.params
         try {
+            const salt = bcryptjs.genSaltSync(10);
+            const hashedPassword = bcryptjs.hashSync(password, salt);
             const data = await db.Account.update(
-                {username, role_id: role},
+                {username, role_id: role, password: hashedPassword},
                 { where: {
                     id
                 } }

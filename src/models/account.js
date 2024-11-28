@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
             Account.hasOne(models.Customer, { foreignKey: "acc_id" });
             Account.belongsTo(models.ListValues, { foreignKey: "list_role_id", targetKey: "list_id", as: "list_role" });
             Account.belongsTo(models.ListValues, { foreignKey: "role_id", targetKey: "ele_id", as: "role" });
+            Account.belongsToMany(models.Tour, {through: models.CusFavorTour, foreignKey: 'cust_id', as: 'favor_tours'})
         }
     }
     Account.init(

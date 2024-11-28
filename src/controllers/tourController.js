@@ -20,10 +20,7 @@ class TourController {
                     id: id,
                 },
                 include: [
-                    {
-                        model: db.Place,
-                        as: "places",
-                    },
+                   
                     {
                         model: db.Schedule,
                         as: 'schedules'
@@ -32,19 +29,12 @@ class TourController {
                         model: db.TourDay,
                         as: "date",
                     },
-                    {
-                        model: db.Hotel,
-                        as: "hotel",
-                    },
+                    
                     {
                         model: db.Image,
                         as: "images",
                     },
-                    {
-                        model: db.Restaurant,
-                        as: "restaurant",
-                    },
-                    { model: db.ListValues, as: "list_types" },
+                    
                     { model: db.ListValues, as: "list_veh" },
                 ],
             });
@@ -53,9 +43,6 @@ class TourController {
                 where: {
                     id: {
                         [Op.ne]: tour.id,
-                    },
-                    type_id: {
-                        [Op.eq]: tour.type_id,
                     },
                 },
                 order: Sequelize.literal("RAND()"),
@@ -188,10 +175,7 @@ class TourController {
         try {
             const list = await db.Tour.findAll({
                 include: [
-                    {
-                        model: db.Place,
-                        as: "places",
-                    },
+                   
                     {
                         model: db.Schedule,
                         as: 'schedules'
@@ -200,28 +184,152 @@ class TourController {
                         model: db.TourDay,
                         as: "date",
                     },
-                    {
-                        model: db.Hotel,
-                        as: "hotel",
-                    },
-                    {
-                        model: db.Restaurant,
-                        as: "restaurant",
-                    },
-
+                
                     {
                         model: db.Image,
                         as: "images",
                     },
-                    { model: db.ListValues, as: "list_types" },
+                    {
+                        model: db.Account,
+                        as: 'liked_users',
+                        attributes: ['id']
+                    },
                     { model: db.ListValues, as: "list_veh" },
                 ],
             });
+
             res.status(200).json({
                 list: list,
             });
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    async likeTour(req, res, next) {
+        const {id} = req.params
+        const userId = req?.user
+        try {
+            await db.CusFavorTour.create({
+                cust_id:userId,
+                tour_id: id,
+            })
+            res.json({
+                msg: 'liked'
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+    async unLikeTour(req, res, next) {
+        const {id} = req.params
+        const userId = req?.user
+        try {
+            await db.CusFavorTour.destroy({
+                where: {
+                    tour_id: id,
+                    cust_id: userId,
+                }
+            })
+            res.json({
+                msg: 'unLiked'
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getNewTours(req, res, next) {
+        try {
+            const data = await db.Tour.findAll({
+                include: [
+                    {
+                        model: db.ListValues,
+                        as: 'veh',
+                        attributes: ['ele_name', 'ele_id'],
+                        where: {
+                            list_id: { [Op.col]: 'Tour.list_veh_id' }
+                        }
+                    },
+
+                    {
+                        model: db.TourDay,
+                        as: 'date',
+                    },
+                    
+                    {
+                        model: db.Image,
+                        as: 'images',
+                        attributes: ['img_url', 'id']
+                    },
+
+                    {
+                        model: db.Schedule,
+                        as: 'schedules',
+                    },
+                    {
+                        model: db.Account,
+                        as: 'liked_users',
+                        attributes: ['id']
+                    }
+                    
+                ],
+                order: [['createdAt', 'DESC']], 
+                limit: 6
+            })
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getDiscountingTours(req, res, next) {
+        try {
+            const data = await db.Tour.findAll({
+                include: [
+                    {
+                        model: db.ListValues,
+                        as: 'veh',
+                        attributes: ['ele_name', 'ele_id'],
+                        where: {
+                            list_id: { [Op.col]: 'Tour.list_veh_id' }
+                        }
+                    },
+
+                    {
+                        model: db.TourDay,
+                        as: 'date',
+                    },
+                    
+                    {
+                        model: db.Image,
+                        as: 'images',
+                        attributes: ['img_url', 'id']
+                    },
+
+                    {
+                        model: db.Schedule,
+                        as: 'schedules',
+                    },
+                    {
+                        model: db.Account,
+                        as: 'liked_users',
+                        attributes: ['id']
+                    },
+                    {
+                        model: db.TourDay,
+                        as: 'date',
+                        where: {
+                            promo: {
+                                [Op.gt] : 0
+                            }
+                        }
+                    },
+                ],
+            })
+            res.json(data)
+        } catch (error) {
+            next(error)
         }
     }
 }

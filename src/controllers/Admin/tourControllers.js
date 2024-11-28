@@ -28,6 +28,12 @@ class AccountController {
                             as: 'images',
                             attributes: ['img_url']
                         },
+
+                        {
+                            model: db.Account,
+                            as: 'liked_users',
+                            attributes: ['id']
+                        }
                         
                     ],
                 
@@ -39,7 +45,7 @@ class AccountController {
             next(error)
         }
     }
-    async getATour (req, res, next) {
+    async getTour (req, res, next) {
         const {id} = req.params
         try {
             const data = await db.Tour.findOne({ where: { id },
@@ -68,6 +74,11 @@ class AccountController {
                         model: db.Schedule,
                         as: 'schedules',
                     },
+                    {
+                        model: db.Account,
+                        as: 'liked_users',
+                        attributes: ['id']
+                    }
                     
                 ],
 
@@ -81,8 +92,8 @@ class AccountController {
     }
 
     async createTour(req, res, next) {
-        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, adultsPrice, childrenPrice, promo, status, description} = req.body
-        const formData = {name, departure_point: departurePoint, destination, list_veh_id: VEHS.ID, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price: adultsPrice, promo, status, description}
+        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, price, status, description} = req.body
+        const formData = {name, departure_point: departurePoint, destination, list_veh_id: VEHS.ID, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price, status, description}
         try {
             const data = await db.Tour.create(formData);
             res.json(data)
@@ -92,8 +103,8 @@ class AccountController {
     }
 
     async updateTour(req, res,next) {
-        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, adultsPrice, childrenPrice, promo, status, description} = req.body
-        const formData = {name, departure_point: departurePoint, destination, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price: adultsPrice, promo, status, description}
+        const {name, departurePoint, destination, veh, countDay, coutNights, countGuess, price, status, description} = req.body
+        const formData = {name, departure_point: departurePoint, destination, veh_id: veh, total_day: `${countDay}N${coutNights}Đ`, number_of_guests: countGuess, price, status, description}
         const {id} = req.params
         try {
             const data = await db.Tour.update(
@@ -125,9 +136,9 @@ class AccountController {
     }
 
     async createNewDate(req, res, next) {
-        const {startDate, endDate, id} =req.body
+        const {startDate, endDate, id, remainSeats, promo} =req.body
         try {
-            const data = await db.TourDay.create({start_date:startDate, end_date:endDate, tour_id: id})
+            const data = await db.TourDay.create({start_date:startDate, end_date:endDate, tour_id: id, remain_seats: remainSeats, promo})
             res.json(data)
         } catch (error) {
             next(error)
@@ -145,10 +156,10 @@ class AccountController {
     }
 
     async createTourSchedule(req, res, next) {
-        const {day, description} =req.body
+        const {day,ten, description} =req.body
         const {id} = req.params
         try {
-            const data = await db.Schedule.create({day, description, tour_id: id})
+            const data = await db.Schedule.create({day, ten, description, tour_id: id})
             res.json(data)
         } catch (error) {
             next(error)

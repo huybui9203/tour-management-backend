@@ -12,6 +12,9 @@ module.exports = {
       day: {
         type: Sequelize.INTEGER
       },
+      ten: {
+        type: Sequelize.STRING,
+      },
       description: {
         type: Sequelize.TEXT
       },

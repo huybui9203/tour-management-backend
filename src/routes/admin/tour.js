@@ -5,7 +5,7 @@ const imageController = require('../../controllers/Admin/imageControllers')
 const adminAuthMiddleware = require("../../middlewares/adminAuthMiddleware");
 
 router.get('/tours',adminAuthMiddleware, tourController.getTours)
-router.get('/tours/:id',adminAuthMiddleware, tourController.getATour)
+router.get('/tours/:id',adminAuthMiddleware, tourController.getTour)
 router.post('/tours',adminAuthMiddleware, tourController.createTour)
 router.put('/tours/:id',adminAuthMiddleware, tourController.updateTour)
 router.delete('/tours/:id',adminAuthMiddleware, tourController.deleteTour)

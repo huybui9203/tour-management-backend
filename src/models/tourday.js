@@ -13,11 +13,13 @@ module.exports = (sequelize, DataTypes) => {
     start_date: DataTypes.DATE,
     end_date: DataTypes.DATE,
     tour_id: DataTypes.INTEGER,
+    remain_seats: DataTypes.INTEGER,
+    promo: DataTypes.FLOAT,
   }, {
     sequelize,
     modelName: 'TourDay',
-    timestamps:true,
-    paranoid: true,
+timestamps:true,
+paranoid: true,
   });
   return TourDay;
 };
