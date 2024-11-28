@@ -3,6 +3,7 @@ const db = require("../models");
 const dotenv = require("dotenv");
 const querystring = require("qs");
 const crypto = require("crypto");
+const cron = require("node-cron");
 const { STATUS_ORDER } = require("../utils/listValues");
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 dotenv.config();
@@ -29,6 +30,52 @@ function sortObject(obj) {
     }
     return sorted;
 }
+
+async function scheduleCancelOrder(idOrder) {
+    const order = await db.Order.findOne({
+        where: {
+            id: idOrder,
+        },
+    });
+
+    const tourDay = await db.TourDay.findOne({
+        where: {
+            id: order.tour_day_id,
+        },
+    });
+
+    const tour = await db.Tour.findOne({
+        where: {
+            id: tourDay.tour_id,
+        },
+    });
+
+    const isPaid = order.pay_date !== null && order.pay_date !== "";
+    if (!isPaid) {
+        await order.update({
+            list_status_id: STATUS_ORDER.ID,
+            status_id: STATUS_ORDER.CANCELED,
+        });
+        await order.save();
+
+        await tour.update({
+            number_of_guests: tour.number_of_guests + order.number_of_people,
+        });
+        await tour.save();
+
+        return;
+    }
+    return;
+}
+
+function cronTaskCancelOrder(idOrder) {
+    const task = cron.schedule("*/5 * * * *", () => {
+        scheduleCancelOrder(idOrder);
+        task.stop();
+    });
+
+    task.start();
+}
 class OrderController {
     async createNewOrder(req, res) {
         const { name, email, address, phone, adult_quantity, child_quantity, adults, childs, total_price, rooms_count, tourDayId, note } =
@@ -50,6 +97,7 @@ class OrderController {
                     id: idTour,
                 },
             });
+            console.log(tour);
 
 
             
@@ -120,6 +168,8 @@ class OrderController {
               },);
 
             await transaction.commit();
+            cronTaskCancelOrder(newOrder.id);
+
             res.status(200).json({
                 message: "Create new order successfully!!!",
                 idOrder: newOrder.id,
@@ -191,6 +241,7 @@ class OrderController {
         var vnp_Params = req.query;
         const { id } = req.params;
         var secureHash = vnp_Params["vnp_SecureHash"];
+        var responseCode = vnp_Params["vnp_ResponseCode"];
 
         delete vnp_Params["vnp_SecureHash"];
         delete vnp_Params["vnp_SecureHashType"];
@@ -199,7 +250,6 @@ class OrderController {
 
         var tmnCode = process.env.TmnCode;
         var secretKey = process.env.VNPAY_SECRET_KEY;
-
         var signData = querystring.stringify(vnp_Params, { encode: false });
         var hmac = crypto.createHmac("sha512", secretKey);
         var signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
@@ -235,7 +285,7 @@ class OrderController {
             }
 
         } else {
-            res.status(200).json({
+            res.status(403).json({
                 message: "Lỗi thanh toán",
             });
         }
