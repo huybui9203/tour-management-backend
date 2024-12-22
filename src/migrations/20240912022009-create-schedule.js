@@ -12,6 +12,9 @@ module.exports = {
       day: {
         type: Sequelize.INTEGER
       },
+      ten: {
+        type: Sequelize.STRING,
+      },
       description: {
         type: Sequelize.TEXT
       },
@@ -24,6 +27,10 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE
+      },
+      deletedAt: {
+        allowNull: true,
         type: Sequelize.DATE
       }
     });

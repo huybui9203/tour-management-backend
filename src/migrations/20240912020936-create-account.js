@@ -9,13 +9,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      email: {
+        type: Sequelize.STRING
+      },
       username: {
         type: Sequelize.STRING
       },
       password: {
-        type: Sequelize.STRING
-      },
-      email: {
         type: Sequelize.STRING
       },
       list_role_id: {
@@ -30,6 +30,10 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE
+      },
+      deletedAt: {
+        allowNull: true,
         type: Sequelize.DATE
       }
     });

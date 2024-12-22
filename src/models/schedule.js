@@ -10,12 +10,14 @@ module.exports = (sequelize, DataTypes) => {
   }
   Schedule.init({
     day: DataTypes.INTEGER,
+    ten: DataTypes.STRING,
     description: DataTypes.TEXT,
     tour_id: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Schedule',
-    timestamps:true
+    timestamps:true,
+    paranoid: true,
   });
   return Schedule;
 };

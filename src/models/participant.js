@@ -12,10 +12,12 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     sex: DataTypes.BOOLEAN,
     date_of_birth: DataTypes.DATE,
+    price_for_one: DataTypes.FLOAT,
     order_id: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Participant',
+    paranoid: true,
   });
   return Participant;
 };
