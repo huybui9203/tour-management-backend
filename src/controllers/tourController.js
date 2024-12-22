@@ -1,6 +1,8 @@
 const { where, Op, Sequelize } = require("sequelize");
 const db = require("../models");
 const dotenv = require("dotenv");
+const { raw } = require("mysql2");
+const { query } = require("express");
 dotenv.config();
 
 class TourController {
@@ -171,6 +173,7 @@ class TourController {
         }
     }
     async getListTour(req, res) {
+        const currUserId = req?.user
         const { page } = req.query;
         try {
             const list = await db.Tour.findAll({
@@ -194,8 +197,20 @@ class TourController {
                         as: 'liked_users',
                         attributes: ['id']
                     },
-                    { model: db.ListValues, as: "list_veh" },
+                    {
+                        model: db.ListValues,
+                        as: 'veh',
+                        attributes: ['ele_name', 'ele_id'],
+                        where: {
+                            list_id: { [Op.col]: 'Tour.list_veh_id' }
+                        }
+                    },
                 ],
+
+                where: {
+                    status: 1
+                },
+                
             });
 
             res.status(200).json({
@@ -274,9 +289,13 @@ class TourController {
                     }
                     
                 ],
+                where: {
+                    status: 1
+                },
                 order: [['createdAt', 'DESC']], 
                 limit: 6
             })
+
             res.json(data)
         } catch (error) {
             next(error)
@@ -326,12 +345,68 @@ class TourController {
                         }
                     },
                 ],
+                where: {
+                    status: 1
+                },
             })
             res.json(data)
         } catch (error) {
             next(error)
         }
     }
+
+
+    async getFavoriteTours(req, res, next) {
+        try {
+            const data = await db.Account.findOne({
+                where: {
+                    id: req?.user
+                },
+                include: [
+                    {model: db.Tour, 
+                        as: 'favor_tours', 
+                        where: {status: 1},
+                        include: [
+                            {
+                                model: db.ListValues,
+                                as: 'veh',
+                                attributes: ['ele_name', 'ele_id'],
+                                where: {
+                                    list_id: { [Op.col]: 'favor_tours.list_veh_id' }
+                                }
+                            },
+        
+                            {
+                                model: db.TourDay,
+                                as: 'date',
+                            },
+                            
+                            {
+                                model: db.Image,
+                                as: 'images',
+                                attributes: ['img_url', 'id']
+                            },
+        
+                            {
+                                model: db.Schedule,
+                                as: 'schedules',
+                            },
+                            {
+                                model: db.Account,
+                                as: 'liked_users',
+                                attributes: ['id']
+                            }
+                        ]
+                    },
+                ]
+            })
+            res.json(data)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+
 }
 
 module.exports = new TourController();

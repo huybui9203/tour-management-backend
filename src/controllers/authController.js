@@ -5,6 +5,10 @@ const dotenv = require("dotenv");
 dotenv.config();
 const { where, Op } = require("sequelize");
 const { ROLES } = require("../utils/listValues");
+const salt = bcryptjs.genSaltSync(10);
+const hashedPassword = bcryptjs.hashSync('123456', salt);
+console.log(hashedPassword)
+
 class AuthController {
     // Signup [POST]
     async signup(req, res) {
@@ -16,13 +20,14 @@ class AuthController {
             return;
         }
         try {
+
             const existAccount = await db.Account.findOne({
                 where: {
-                    email: email,
+                    [Op.or]: [ { username }, { email } ]
                 },
             });
             if (existAccount) {
-                res.status(400).json({
+                res.status(409).json({
                     message: "Account is exist",
                 });
                 return;

@@ -40,6 +40,17 @@ class AccountController {
         const salt = bcryptjs.genSaltSync(10);
         const hashedPassword = bcryptjs.hashSync(password, salt);
         try {
+            const isAccountExist = await db.Account.findOne({
+                where: {
+                    [Op.or]: [ { username }, { email } ]
+                }
+            })
+
+            if(isAccountExist) {
+                return res.status(409).json({
+                    msg: 'Account has already existed'
+                })
+            }
             const data = await db.Account.create({ username, email, password:hashedPassword, list_role_id: ROLES.ID, role_id: role });
             res.json(data)
         } catch (error) {
@@ -50,10 +61,33 @@ class AccountController {
         const {username, role, password} = req.body
         const {id} = req.params
         try {
-            const salt = bcryptjs.genSaltSync(10);
-            const hashedPassword = bcryptjs.hashSync(password, salt);
+
+            const isAccountExist = await db.Account.findOne({
+                where: {
+                    [Op.and]: [
+                        {username},
+                        {id: {
+                            [Op.ne] : id
+                        }}
+                    ]
+                }
+            })
+
+            if(isAccountExist) {
+                return res.status(409).json({
+                    msg: 'Account has already existed'
+                })
+            }
+
+            let hashedPassword
+            const formData = {username, role_id: role}
+            if(password) {
+                const salt = bcryptjs.genSaltSync(10);
+                hashedPassword = bcryptjs.hashSync(password, salt);
+                formData.password = hashedPassword
+            }
             const data = await db.Account.update(
-                {username, role_id: role, password: hashedPassword},
+               formData,
                 { where: {
                     id
                 } }

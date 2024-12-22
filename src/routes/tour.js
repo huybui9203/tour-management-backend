@@ -11,4 +11,5 @@ router.post('/:id/like',verifyUser, tourController.likeTour)
 router.delete('/:id/unLike',verifyUser, tourController.unLikeTour)
 router.get('/new', tourController.getNewTours)
 router.get('/discount', tourController.getDiscountingTours)
+router.get('/favorite',verifyUser, tourController.getFavoriteTours)
 module.exports = router;
